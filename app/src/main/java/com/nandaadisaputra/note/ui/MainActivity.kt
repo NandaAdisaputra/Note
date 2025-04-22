@@ -3,85 +3,131 @@ package com.nandaadisaputra.note.ui
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.nandaadisaputra.note.R
 import com.nandaadisaputra.note.adapter.NoteAdapter
+import com.nandaadisaputra.note.model.Note
 import com.nandaadisaputra.note.viewmodel.NoteViewModel
 
 class MainActivity : AppCompatActivity() {
-    //Buat instance dari ViewModel menggunakan viewModels()
-    private val viewModel:NoteViewModel by viewModels()
-    //Adapter untuk menampilkan data di RecyclerView
+
+    // Variabel untuk menyimpan catatan yang sedang dipilih (untuk keperluan edit)
+    private var selectNote: Note? = null
+
+    // ViewModel untuk mengelola data catatan
+    private val vm: NoteViewModel by viewModels()
+
+    // Adapter untuk RecyclerView
     private lateinit var adapter: NoteAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Ambil referensi komponen dari layout XML
-        val titleInput = findViewById<EditText>(R.id.etTitle)
-        val descInput = findViewById<EditText>(R.id.etDescription)
-        val btnAdd = findViewById<Button>(R.id.btnSave)
+        // Inisialisasi elemen-elemen UI
+        val etTitle = findViewById<EditText>(R.id.etTitle)
+        val etDesc = findViewById<EditText>(R.id.etDescription)
+        val btnSave = findViewById<Button>(R.id.btnSave)
         val rvNotes = findViewById<RecyclerView>(R.id.rvNotes)
 
-        //Tampilkan jumlah catatan menggunakan toast setiap kali data berubah
-        viewModel.notes.observe(this, Observer {
-            Toast.makeText(this,"Jumlah Catatan: ${it.size}", Toast.LENGTH_SHORT).show()
+        // Mengamati perubahan data pada ViewModel dan memperbarui RecyclerView
+        vm.notes.observe(this, Observer {
+            // Memperbarui data di adapter dengan data terbaru dari ViewModel
+            adapter.updateData(it)
         })
 
-        //Inisialisasi adapter dengan  data kosong
-        adapter = NoteAdapter(emptyList())
+        // Inisialisasi adapter dengan callback untuk edit dan delete catatan
+        adapter = NoteAdapter(emptyList(),
+            onEditClick = {
+                // Ketika tombol edit diklik, set nilai selectNote untuk edit
+                selectNote = it
+                // Isi data yang ada di catatan ke dalam EditText untuk diubah
+                etTitle.setText(it.title)
+                etDesc.setText(it.description)
+                // Ubah teks tombol Save menjadi "Update"
+                btnSave.text = "Update"
+            },
+            onDeleteClick = {
+                // Ketika tombol delete diklik, tampilkan dialog konfirmasi
+                AlertDialog.Builder(this).apply {
+                    setTitle("Hapus Catatan")
+                    setMessage("Yakin ingin hapus?")
+                    setPositiveButton("Hapus") { _, _ ->
+                        // Panggil fungsi untuk menghapus catatan dari ViewModel
+                        vm.deleteNote(it.id) {
+                            runOnUiThread {
+                                // Tampilkan Toast jika berhasil menghapus
+                                Toast.makeText(this@MainActivity, "Berhasil dihapus", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                    setNegativeButton("Batal", null)
+                    show()
+                }
+            }
+        )
 
-        //Atur RecyclerView pakai layout vertical
+        // Set RecyclerView dengan layout manager dan adapter
         rvNotes.layoutManager = LinearLayoutManager(this)
         rvNotes.adapter = adapter
 
-        //Perbarui isi adapter setiap kali data di LiveData berubah
-        viewModel.notes.observe(this){
-            adapter.updateData(it)
-        }
+        // Ketika tombol Save diklik
+        btnSave.setOnClickListener {
+            val title = etTitle.text.toString()
+            val desc = etDesc.text.toString()
 
-        //Aksi ketika tombol simpan di tekan
-        btnAdd.setOnClickListener {
-            val title = titleInput.text.toString()
-            val desc = descInput.text.toString()
-
-            //Kirim data ke viewmodel untuk ditambahkan
-            viewModel.addNote(title, desc){ success->
-                runOnUiThread {
-                    Toast.makeText(this, if(success) "Berhasil" else "Gagal!", Toast.LENGTH_SHORT).show()
+            // Jika tidak ada catatan yang dipilih, maka tambahkan catatan baru
+            if (selectNote == null) {
+                vm.addNote(title, desc) {
+                    runOnUiThread {
+                        // Tampilkan Toast sesuai hasil operasi
+                        Toast.makeText(this, if (it) "Berhasil" else "Gagal", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                // Jika ada catatan yang dipilih, lakukan update pada catatan tersebut
+                vm.updateNote(selectNote!!.id, title, desc) {
+                    runOnUiThread {
+                        // Tampilkan Toast sesuai hasil operasi
+                        Toast.makeText(this, if (it) "Update Berhasil" else "Update Gagal", Toast.LENGTH_SHORT).show()
+                        selectNote = null
+                        btnSave.text = "Simpan"  // Ubah kembali teks tombol Save
+                    }
                 }
             }
+
+            // Kosongkan EditText setelah selesai
+            etTitle.text.clear()
+            etDesc.text.clear()
         }
-        //Input Pencarian
-        val searchInput = findViewById<EditText>(R.id.etSearch)
-        //Tambahkan listener untuk mendeteksi perubahan teks
-        searchInput.addTextChangedListener(object : TextWatcher {
-            //Fungsi ini tidak digunakan tapi tetap wajib diisi
-            override fun beforeTextChanged(s: CharSequence?,start:Int, count:Int, after:Int) {}
 
-            override fun onTextChanged(s: CharSequence?, start:Int, before:Int,count:Int) {}
-
+        // Cari catatan berdasarkan input pencarian
+        val etSearch = findViewById<EditText>(R.id.etSearch)
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-               val query = s.toString()
-                //Kalau query tidak kosong, cari catatan
-                if (query.isNotEmpty()){
-                    viewModel.searchNotes(query)
-                } else{
-                    //kalau kosong, tampilkan semua catatan
-                    viewModel.loadNotes()
-                }
+                val q = s.toString()
+                // Jika query pencarian tidak kosong, cari catatan berdasarkan query
+                if (q.isNotEmpty()) vm.searchNotes(q) else vm.loadNotes()
             }
         })
 
-        //saat pertama kali dibuka, langsung tampilkan semua catatan
-        viewModel.loadNotes()
-
+        // Memuat catatan pada saat aplikasi pertama kali dijalankan
+        vm.loadNotes()
     }
 }
+
+
+//Tips Cepat Hafal:
+//ViewModel → by viewModels()
+//Gunakan Observer untuk update RecyclerView
+//Tambah/Edit: deteksi dengan selectNote == null
+//AlertDialog wajib buat hapus
+//Cari data: TextWatcher + viewModel.searchNotes()

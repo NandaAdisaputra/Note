@@ -1,46 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:padding="16dp"
-    android:orientation="vertical"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp">
 
+    <!-- EditText untuk Search -->
     <EditText
         android:id="@+id/etSearch"
+        style="@style/LayoutEditText"
         android:hint="@string/cari_catatan"
         android:autofillHints="@string/cari_catatan"
-        android:inputType="textAutoComplete"
-        android:padding="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- EditText untuk Title -->
     <EditText
         android:id="@+id/etTitle"
+        style="@style/LayoutEditText"
         android:hint="@string/judul"
         android:autofillHints="@string/judul"
-        android:inputType="textAutoComplete"
-        android:padding="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        app:layout_constraintTop_toBottomOf="@id/etSearch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
 
+    <!-- EditText untuk Deskripsi -->
     <EditText
         android:id="@+id/etDescription"
+        style="@style/LayoutEditText"
         android:hint="@string/deskripsi"
         android:autofillHints="@string/deskripsi"
-        android:inputType="textAutoComplete"
-        android:layout_width="match_parent"
-        android:padding="12dp"
-        android:layout_height="wrap_content"/>
+        app:layout_constraintTop_toBottomOf="@id/etTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
 
+    <!-- Button Simpan -->
     <Button
         android:id="@+id/btnSave"
         android:text="@string/simpan_catatan"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:backgroundTint="@color/color_button"
+        android:textColor="@color/color_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/etDescription"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/rvNotes"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"/>
 
+    <!-- RecyclerView untuk Menampilkan Catatan -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvNotes"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/btnSave"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/item_note"
         android:layout_marginTop="16dp"/>
-</LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

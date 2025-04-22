@@ -1,84 +1,81 @@
 package com.nandaadisaputra.note.repository
 
-import android.app.DownloadManager.Query
-import android.media.audiofx.AudioEffect.Descriptor
 import android.util.Log
 import com.nandaadisaputra.note.model.Note
 import com.nandaadisaputra.note.network.ApiRequest
 import org.json.JSONObject
 
+// Repository untuk mengelola data catatan, berinteraksi dengan API
 class NoteRepository {
-    //Fungsi untuk mengambil semua catatan dari API
-    fun getAllNote():List<Note>{
-        //Panggil fungsi getNotes() dari ApiRequest untuk mendapatkan data mentahnya
-        val response = ApiRequest.getNotes()
-        //Buat list kosong untuk menyimpan hasil parsingnya
-        val noteList = mutableListOf<Note>()
-        //Ubah response ( String ) menjadi JSONObject
-        val jsonObject = org.json.JSONObject(response)
-        //Ambil array dari field "data" dalam JSON
-        val dataArray = jsonObject.getJSONArray("data")
-        //Loop setiap item dalam array dan ubah ke objek Note
-        for ( i in 0 until dataArray.length()){
-            val obj = dataArray.getJSONObject(i)
-            noteList.add(
-                Note(
-                    id = obj.getInt("id"),
-                    title = obj.getString("title"),
-                    description = obj.getString("description")
-                )
-            )
 
-            }
-        //Kembalikan daftar catatan
-        return noteList
+    // Fungsi untuk mengambil semua catatan dari server
+    fun getAllNote(): List<Note> {
+        // Mengambil data catatan dari API
+        val res = ApiRequest.getNotes()
+
+        // Mengonversi response JSON ke dalam bentuk array
+        val arr = JSONObject(res).getJSONArray("data")
+
+        // Mengubah array JSON menjadi list of Note object
+        return List(arr.length()) { i ->
+            val o = arr.getJSONObject(i) // Mendapatkan objek JSON pada index i
+            Note(o.getInt("id"), o.getString("title"), o.getString("description")) // Membuat objek Note dari JSON
         }
+    }
 
     // Fungsi untuk menambahkan catatan baru
-    fun addNote(title: String, description: String): Boolean {
-        return try {
-            // Kirim data ke API dan simpan responnya
-            val response = ApiRequest.addNote(title, description)
+    fun addNote(t: String, d: String): Boolean = try {
+        // Mengirim request untuk menambah catatan dan memeriksa statusnya
+        val s = JSONObject(ApiRequest.addNote(t, d)).getString("status")
+        // Mengembalikan true jika statusnya "success", jika tidak, false
+        s.equals("success", true)
+    } catch (e: Exception) {
+        // Menangani error jika terjadi masalah dalam pengiriman atau response
+        Log.e("AddNote", e.message.toString())
+        false // Mengembalikan false jika terjadi error
+    }
 
-            // Tampilkan response di log untuk debugging
-            Log.d("API Response", response)
+    // Fungsi untuk mencari catatan berdasarkan query
+    fun searchNotes(q: String): List<Note> {
+        // Mengambil data pencarian dari API
+        val res = ApiRequest.searchNotes(q)
 
-            // Ubah response menjadi JSONObject
-            val jsonResponse = JSONObject(response)
+        // Mengonversi response JSON menjadi array
+        val arr = JSONObject(res).getJSONArray("data")
 
-            // Periksa apakah status dari response bernilai "success"
-            jsonResponse.getString("status").equals("success", ignoreCase = true)
-        } catch (e: Exception) {
-            // Jika terjadi error saat parsing, tampilkan di log dan kembalikan false
-            Log.e("AddNoteError", "Error parsing response: ${e.message}")
-            false
+        // Mengubah array JSON menjadi list of Note object
+        return List(arr.length()) { i ->
+            val o = arr.getJSONObject(i) // Mendapatkan objek JSON pada index i
+            Note(o.getInt("id"), o.getString("title"), o.getString("description")) // Membuat objek Note dari JSON
         }
     }
 
-    //Fungsi Pencarian Data
-    fun searchNotes(query: String):List<Note> {
-        //Kirim query ke API dan simpan responsenya
-        val response = ApiRequest.searchNotes(query)
-        val noteList = mutableListOf<Note>()
-
-        //Ubah response menjadi JSONObject
-        val jsonObject = JSONObject(response)
-        val dataArray = jsonObject.getJSONArray("data")
-
-        //Loop setiap item dalam Array dan ubah ke objek Note
-        for (i in 0 until dataArray.length()) {
-            val obj = dataArray.getJSONObject(i)
-            noteList.add(
-                Note(
-                    id = obj.getInt("id"),
-                    title = obj.getString("title"),
-                    description = obj.getString("description")
-                )
-            )
-        }
-
-        //Kembalikan hasil pencarian dalam bentuk list
-        return noteList
+    // Fungsi untuk memperbarui catatan berdasarkan ID
+    fun updateNote(id: Int, t: String, d: String): Boolean = try {
+        // Mengirim request untuk mengupdate catatan dan memeriksa statusnya
+        val s = JSONObject(ApiRequest.updateNote(id.toString(), t, d)).getString("status")
+        // Mengembalikan true jika statusnya "success", jika tidak, false
+        s.equals("success", true)
+    } catch (e: Exception) {
+        // Menangani error jika terjadi masalah dalam pengiriman atau response
+        false // Mengembalikan false jika terjadi error
     }
 
+    // Fungsi untuk menghapus catatan berdasarkan ID
+    fun deleteNote(id: Int): Boolean = try {
+        // Mengirim request untuk menghapus catatan dan memeriksa statusnya
+        val s = JSONObject(ApiRequest.deleteNote(id.toString())).getString("status")
+        // Mengembalikan true jika statusnya "success", jika tidak, false
+        s.equals("success", true)
+    } catch (e: Exception) {
+        // Menangani error jika terjadi masalah dalam pengiriman atau response
+        false // Mengembalikan false jika terjadi error
+    }
 }
+
+
+//Tips Hafalan Cepat:
+//getAllNote, searchNotes = selalu parsing JSONArray.
+//addNote, updateNote, deleteNote = parsing status.
+//Gunakan s.equals("success", true) untuk hasil.
+//Tangani error langsung pakai try-catch.
