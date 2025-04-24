@@ -6,4 +6,13 @@
     <string name="simpan_catatan">Simpan Catatan</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="register">Register</string>
+    <string name="sudah_punya_akun">Sudah punya akun?</string>
+    <string name="klik_untuk_masuk_ke_login">Klik untuk masuk ke login</string>
+    <string name="belum_punya_akun_daftar">Belum punya akun? Daftar</string>
+    <string name="logout">Logout</string>
+    <string name="note">note</string>
 </resources>

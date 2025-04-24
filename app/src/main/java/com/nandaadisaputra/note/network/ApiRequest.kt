@@ -17,6 +17,10 @@ object ApiRequest {
     private fun get(end: String) = URL("$BASE?endpoint=$end") // Menyusun URL lengkap dengan endpoint
         .openConnection().getInputStreamText() // Mengambil data dari URL dengan fungsi getInputStreamText()
 
+    // Fungsi untuk request GET dengan token
+    private fun getWithToken(end: String, token: String): String =
+        URL("$BASE?endpoint=$end&token=${token.e()}").openConnection().getInputStreamText()
+
     // Fungsi untuk membaca response dari server, baik itu hasil GET atau POST
     private fun URLConnection.getInputStreamText() = getInputStream().bufferedReader().readText()
 
@@ -29,9 +33,27 @@ object ApiRequest {
         conn.outputStream.write(data.toByteArray()) // Menulis data ke dalam body POST request
         return conn.inputStream.bufferedReader().readText() // Membaca dan mengembalikan response server
     }
+    // Fungsi untuk registrasi pengguna
+    fun registerUser(username: String, password: String, email: String): String {
+        return post("endpoint=register&username=${username.e()}&password=${password.e()}&email=${email.e()}")
+    }
+    // Fungsi untuk login pengguna
+    fun loginUser(username: String, password: String): String {
+        return post("endpoint=login&username=${username.e()}&password=${password.e()}")
+    }
+    // Fungsi untuk mendapatkan detail catatan berdasarkan ID (menggunakan GET)
+    fun getNoteById(id: String) = get("getNoteById&id=${id.e()}")
+
+    // Fungsi untuk menampilkan catatan dengan token dan paginasi
+    fun getNotesPaginatedWithToken(page: Int, limit: Int, token: String): String {
+        return URL("$BASE?endpoint=getNotesPaginatedwithToken&page=$page&limit=$limit&token=${token.e()}")
+            .openConnection()
+            .getInputStreamText()
+    }
+
 
     // Fungsi untuk mendapatkan semua catatan (menggunakan GET)
-    fun getNotes() = get("getNotes")
+    fun getNotes() = get("getnotes")
 
     // Fungsi untuk mencari catatan berdasarkan query tertentu (menggunakan GET)
     fun searchNotes(q: String) = get("searchNotes&query=${q.e()}") // Mengencode query untuk aman di URL

@@ -9,49 +9,84 @@ import androidx.recyclerview.widget.RecyclerView
 import com.nandaadisaputra.note.R
 import com.nandaadisaputra.note.model.Note
 
-// Adapter untuk RecyclerView yang menampilkan daftar catatan
+// Adapter untuk menampilkan data note pada RecyclerView
 class NoteAdapter(
-    private var notes: List<Note>, // Daftar catatan yang akan ditampilkan
-    private val onEditClick: (Note) -> Unit, // Aksi saat tombol edit diklik
-    private val onDeleteClick: (Note) -> Unit // Aksi saat tombol hapus diklik
+    // Daftar catatan yang akan ditampilkan di RecyclerView
+    private val notes: MutableList<Note> = mutableListOf(),
+
+    // Callback untuk aksi edit, jika ada
+    private val onEditClick: ((Note) -> Unit)? = null,
+
+    // Callback untuk aksi hapus, jika ada
+    private val onDeleteClick: ((Note) -> Unit)? = null,
+
+    // Callback untuk aksi klik item, jika ada
+    private val onItemClick: ((Note) -> Unit)? = null
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
-    // ViewHolder untuk merepresentasikan satu item tampilan catatan
-    class NoteViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-        val tvTitle: TextView = v.findViewById(R.id.tvTitle) // Teks judul
-        val tvDesc: TextView = v.findViewById(R.id.tvDesc)   // Teks deskripsi
-        val btnEdit: Button = v.findViewById(R.id.btnEdit)   // Tombol edit
-        val btnDelete: Button = v.findViewById(R.id.btnDelete) // Tombol hapus
+    // ViewHolder yang memegang tampilan item catatan
+    inner class NoteViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        // Menghubungkan komponen UI dalam item layout (TextView, Button)
+        val tvTitle: TextView = view.findViewById(R.id.tvTitle)
+        val tvDesc: TextView = view.findViewById(R.id.tvDesc)
+        val btnEdit: Button? = view.findViewById(R.id.btnEdit)
+        val btnDelete: Button? = view.findViewById(R.id.btnDelete)
     }
 
-    // Membuat ViewHolder baru dari layout item_note.xml
-    override fun onCreateViewHolder(p: ViewGroup, vt: Int): NoteViewHolder {
-        val v = LayoutInflater.from(p.context).inflate(R.layout.item_note, p, false)
-        return NoteViewHolder(v)
+    // Membuat ViewHolder dan menghubungkannya dengan layout item
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
+        // Menginflate layout item_note untuk setiap item dalam RecyclerView
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_note, parent, false)
+        return NoteViewHolder(view)
     }
 
-    // Mengembalikan jumlah item dalam daftar
+    // Mengikat data catatan ke dalam ViewHolder untuk ditampilkan
+    override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
+        val note = notes[position]
+
+        // Mengatur teks pada TextView untuk judul dan deskripsi catatan
+        holder.tvTitle.text = note.title
+        holder.tvDesc.text = note.description
+
+        // Menangani klik pada item untuk membuka detail atau aksi lainnya
+        holder.itemView.setOnClickListener {
+            onItemClick?.invoke(note) // Memanggil callback onItemClick jika ada
+        }
+
+        // Menangani klik pada tombol Edit untuk memodifikasi catatan
+        holder.btnEdit?.setOnClickListener {
+            onEditClick?.invoke(note) // Memanggil callback onEditClick jika ada
+        }
+
+        // Menangani klik pada tombol Delete untuk menghapus catatan
+        holder.btnDelete?.setOnClickListener {
+            onDeleteClick?.invoke(note) // Memanggil callback onDeleteClick jika ada
+        }
+    }
+
+    // Mengembalikan jumlah item yang ada dalam daftar catatan
     override fun getItemCount(): Int = notes.size
 
-    // Menghubungkan data catatan dengan tampilan item
-    override fun onBindViewHolder(h: NoteViewHolder, pos: Int) {
-        val n = notes[pos] // Ambil data catatan berdasarkan posisi
-        h.tvTitle.text = n.title // Set judul catatan
-        h.tvDesc.text = n.description // Set deskripsi catatan
+    // Fungsi untuk memperbarui data catatan
+    // Parameter reverse menentukan apakah data baru dibalik urutannya atau tidak
+    fun updateData(newNotes: List<Note>, reverse: Boolean = true) {
+        // Menyimpan posisi awal data lama
+        val startPos = notes.size
 
-        // Atur aksi tombol edit saat diklik
-        h.btnEdit.setOnClickListener { onEditClick(n) }
+        // Menghapus seluruh data catatan yang lama
+        notes.clear()
 
-        // Atur aksi tombol hapus saat diklik
-        h.btnDelete.setOnClickListener { onDeleteClick(n) }
-    }
+        // Menambahkan data catatan baru, dibalik urutannya jika reverse true
+        notes.addAll(if (reverse) newNotes.reversed() else newNotes)
 
-    // Memperbarui daftar data dan membalik urutan agar yang terbaru di atas
-    fun updateData(newNote: List<Note>) {
-        notes = newNote.reversed() // Balik urutan catatan
-        notifyDataSetChanged()     // Beritahu adapter bahwa data berubah
+        // Notifikasi bahwa item lama telah dihapus
+        notifyItemRangeRemoved(0, startPos)
+
+        // Notifikasi bahwa item baru telah ditambahkan
+        notifyItemRangeInserted(0, newNotes.size)
     }
 }
+
 
 // Tips Hafalan Cepat:
 // Gunakan huruf pendek untuk parameter (p, vt, h, n) biar hemat ingatan.

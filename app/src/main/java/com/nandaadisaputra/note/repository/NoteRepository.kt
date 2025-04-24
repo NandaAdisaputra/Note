@@ -22,6 +22,62 @@ class NoteRepository {
             Note(o.getInt("id"), o.getString("title"), o.getString("description")) // Membuat objek Note dari JSON
         }
     }
+    // Fungsi untuk registrasi pengguna
+    fun registerUser(username: String, password: String, email: String): Boolean = try {
+        val response = JSONObject(ApiRequest.registerUser(username, password, email))
+        val status = response.getString("status")
+        status.equals("success", true)
+    } catch (e: Exception) {
+        Log.e("RegisterUser", e.message.toString())
+        false
+    }
+    // Fungsi untuk login pengguna
+    fun loginUser(username: String, password: String): Pair<Boolean, String?> = try {
+        val response = JSONObject(ApiRequest.loginUser(username, password))
+        val status = response.getString("status")
+        if (status.equals("success", true)) {
+            val token = response.getJSONObject("data").getString("token")
+            Pair(true, token)
+        } else {
+            Pair(false, null)
+        }
+    } catch (e: Exception) {
+        Log.e("LoginUser", e.message.toString())
+        Pair(false, null)
+    }
+    // Ambil catatan berdasarkan ID
+    fun getNoteById(id: Int): Note? = try {
+        val res = ApiRequest.getNoteById(id.toString()) // Asumsikan fungsi ini ada di ApiRequest
+        val data = JSONObject(res).getJSONObject("data")
+        Note(data.getInt("id"), data.getString("title"), data.getString("description"))
+    } catch (e: Exception) {
+        Log.e("GetNoteById", e.message.toString())
+        null
+    }
+    // Fungsi untuk mengambil catatan dengan token dan paginasi
+    fun getPaginatedNotes(page: Int, limit: Int, token: String): List<Note> = try {
+        // Mengambil data dari API dengan pagination dan token
+        val res = ApiRequest.getNotesPaginatedWithToken(page, limit, token)
+
+        // Parsing respons JSON
+        val responseObject = JSONObject(res)
+        val dataObject = responseObject.getJSONObject("data") // Ambil objek data
+        val notesArray = dataObject.getJSONArray("notes") // Ambil array notes
+
+        // Mengubah array JSON menjadi list of Note object
+        List(notesArray.length()) { i ->
+            val noteObject = notesArray.getJSONObject(i)
+            Note(
+                id = noteObject.getInt("id"),
+                title = noteObject.getString("title"),
+                description = noteObject.getString("description")
+            )
+        }
+    } catch (e: Exception) {
+        // Menangani error jika terjadi masalah dalam pengiriman atau response
+        Log.e("PaginatedNotes", e.message.toString())
+        emptyList() // Mengembalikan list kosong jika terjadi error
+    }
 
     // Fungsi untuk menambahkan catatan baru
     fun addNote(t: String, d: String): Boolean = try {
