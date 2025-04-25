@@ -56,25 +56,14 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         // Set loading ke true
         _isLoading.postValue(true)
         val response = repo.addNote(t, d)
-        val success = response != null && response.code == 200
+        val success = response?.code in 200..299
         cb(success)
         // Setelah selesai, set loading ke false
         _isLoading.postValue(false)
         if (success) {
             val updated = repo.getAllNotes()
             updated?.let { _notes.postValue(it.data) }
-        }
-    }
-
-    // Function to search notes based on a query
-    fun searchNotes(q: String) = thread {
-        // Set loading ke true
-        _isLoading.postValue(true)
-        val result = repo.searchNotes(q)
-        result?.let {
-            // Setelah selesai, set loading ke false
-            _isLoading.postValue(false)
-            _notes.postValue(it.data)
+            getPaginatedNotes(1, 10)
         }
     }
 
@@ -93,6 +82,19 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             getPaginatedNotes(1, 10)
         }
     }
+    // Function to search notes based on a query
+    fun searchNotes(q: String) = thread {
+        // Set loading ke true
+        _isLoading.postValue(true)
+        val result = repo.searchNotes(q)
+        result?.let {
+            // Setelah selesai, set loading ke false
+            _isLoading.postValue(false)
+            _notes.postValue(it.data)
+        }
+    }
+
+
 
     // Function to delete a note
     fun deleteNote(id: Int, cb: (Boolean) -> Unit) = thread {
@@ -137,23 +139,20 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-
-    // Function to export notes to PDF
+    //Function to export notes to PDF
     fun exportNotesToPdf() = thread {
-        // Set loading ke true
+     //set loading ke true
         _isLoading.postValue(true)
         try {
-            // Setelah selesai, set loading ke false
+            //setelah selesai, set loading ke false
             _isLoading.postValue(false)
             val result = repo.exportNotesToPdf()
             _exportPdfResult.postValue(result)
-        } catch (e: Exception) {
-            Log.e("VM", "Error exporting PDF: ${e.message}")
+        } catch (e:Exception){
+            Log.e("VM","Error exporting PDF: ${e.message}")
             _exportPdfResult.postValue(Pair(false, null))
         }
     }
-
     // Function to export notes to CSV
     fun exportNotesToCsv() = thread {
         // Set loading ke true

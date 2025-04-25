@@ -17,7 +17,7 @@ import java.net.URL
 import kotlin.concurrent.thread
 
 // Activity untuk mengekspor catatan ke dalam file CSV dan otomatis mendownload file-nya
-class ExportNotesCsvActivity : AppCompatActivity() {
+class ExportNoteCsvActivity : AppCompatActivity() {
 
     // ViewModel untuk proses ekspor
     private val noteViewModel: NoteViewModel by viewModels()
@@ -32,7 +32,7 @@ class ExportNotesCsvActivity : AppCompatActivity() {
 
         // Hubungkan komponen UI
         exportButton = findViewById(R.id.export_button)
-        progressBar = findViewById(R.id.progress_bar)
+        progressBar = findViewById(R.id.exportCsvProgressBar)
 
         // Observasi hasil ekspor CSV dari ViewModel
         noteViewModel.exportCsvResult.observe(this) { result ->

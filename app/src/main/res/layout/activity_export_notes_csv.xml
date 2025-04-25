@@ -18,7 +18,7 @@
         android:layout_marginTop="100dp" />
 
     <ProgressBar
-        android:id="@+id/progress_bar"
+        android:id="@+id/exportCsvProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"

@@ -111,8 +111,13 @@ class PaginationNoteActivity : AppCompatActivity() {
 
         // Aksi tombol simpan/update catatan
         btnSave.setOnClickListener {
-            val title = etTitle.text.toString()
-            val desc = etDesc.text.toString()
+            val title = etTitle.text.toString().trim()
+            val desc = etDesc.text.toString().trim()
+
+            if (title.isEmpty() || desc.isEmpty()) {
+                Toast.makeText(this, "Judul dan deskripsi tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             if (selectNote == null) {
                 // Tambah catatan baru
@@ -128,17 +133,16 @@ class PaginationNoteActivity : AppCompatActivity() {
                         Toast.makeText(this, if (it) "Update Berhasil" else "Update Gagal", Toast.LENGTH_SHORT).show()
                         selectNote = null
                         btnSave.text = "Simpan"
-                        // Reload data dari halaman pertama
                         page = 1
                         vm.getPaginatedNotes(page, pageSize)
                     }
                 }
             }
 
-            // Kosongkan input setelah simpan
             etTitle.text.clear()
             etDesc.text.clear()
         }
+
 
         // Fitur pencarian
         etSearch.addTextChangedListener(object : TextWatcher {

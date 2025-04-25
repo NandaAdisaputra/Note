@@ -32,10 +32,9 @@ object NoteApi {
     fun deleteNote(id: String): String {
         return ApiRequest.post("endpoint=delete_note&id=${id.e()}")
     }
-
-    // Fungsi untuk export CSV semua catatan
+    //Fungsi untuk export CSV semua catatan
     fun exportNotesToCsv(): String = ApiRequest.get("exportcsv")
 
-    // Fungsi untuk export PDF semua catatan
+    //Fungsi untuk export PDF semua catatan
     fun exportNotesToPdf(): String = ApiRequest.get("exportpdf")
 }

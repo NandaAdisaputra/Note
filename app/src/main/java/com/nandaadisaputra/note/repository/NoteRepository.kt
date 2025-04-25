@@ -107,7 +107,7 @@ class NoteRepository {
 
 
     // Fungsi untuk menambahkan catatan baru
-   // Menggunakan NoteResponse karena mengembalikan status dan pesan bersama dengan data catatan baru.
+    // Menggunakan NoteResponse karena mengembalikan status dan pesan bersama dengan data catatan baru.
     fun addNote(t: String, d: String): NoteResponse? = try {
         val res = NoteApi.addNote(t, d)  // Mengirim permintaan untuk menambahkan catatan baru
         val jsonObject = JSONObject(res)  // Mengubah respons JSON menjadi objek
@@ -124,15 +124,41 @@ class NoteRepository {
         )
 
         // Mengembalikan NoteResponse dengan data catatan yang baru
-        NoteResponse(code, status, message, listOf(newNote))
+        NoteResponse(code, status, message,listOf(newNote))
     } catch (e: Exception) {
         Log.e("AddNote", e.message.toString())  // Menangani error jika ada
         null  // Mengembalikan null jika terjadi error
     }
 
 
+    // Fungsi untuk mengupdate catatan
+    // Menggunakan NoteResponse karena hanya status dan pesan yang dikembalikan, tanpa data catatan.
+    fun updateNote(id: Int, t: String, d: String): NoteResponse? = try {
+        val res= NoteApi.updateNote(
+            id.toString(),
+            t,
+            d
+        )  // Mengirim permintaan untuk memperbarui catatan
+        val jsonObject = JSONObject(res)  // Mengubah respons JSON menjadi objek
+        val code = jsonObject.getInt("code")  // Mendapatkan status kode
+        val status = jsonObject.getString("status")  // Mendapatkan status
+        val message = jsonObject.getString("message")  // Mendapatkan pesan
+        val dataObject =
+            jsonObject.getJSONObject("data")  // Mendapatkan data catatan yang baru ditambahkan
+        val newNote = Note(
+            id = dataObject.getInt("id"),
+            title = dataObject.getString("title"),
+            description = dataObject.getString("description")
+        )
+        // Mengembalikan NoteResponse dengan status dan pesan
+        NoteResponse(code, status, message, listOf(newNote))  // Tidak ada data catatan yang dikembalikan
+    } catch (e: Exception) {
+        Log.e("UpdateNote", e.message.toString())  // Menangani error jika ada
+        null  // Mengembalikan null jika terjadi error
+    }
+
     // Fungsi untuk mencari catatan berdasarkan kata kunci
-   // Menggunakan NoteResponse karena hasil pencarian bisa mengembalikan banyak catatan.
+    // Menggunakan NoteResponse karena hasil pencarian bisa mengembalikan banyak catatan.
     fun searchNotes(q: String): NoteResponse? = try {
         val res =
             NoteApi.searchNotes(q)  // Mengirim permintaan untuk mencari catatan berdasarkan kata kunci
@@ -164,29 +190,8 @@ class NoteRepository {
     }
 
 
-    // Fungsi untuk mengupdate catatan
-   // Menggunakan NoteResponse karena hanya status dan pesan yang dikembalikan, tanpa data catatan.
-    fun updateNote(id: Int, t: String, d: String): NoteResponse? = try {
-        val response = NoteApi.updateNote(
-            id.toString(),
-            t,
-            d
-        )  // Mengirim permintaan untuk memperbarui catatan
-        val jsonObject = JSONObject(response)  // Mengubah respons JSON menjadi objek
-        val code = jsonObject.getInt("code")  // Mendapatkan status kode
-        val status = jsonObject.getString("status")  // Mendapatkan status
-        val message = jsonObject.getString("message")  // Mendapatkan pesan
-
-        // Mengembalikan NoteResponse dengan status dan pesan
-        NoteResponse(code, status, message, listOf())  // Tidak ada data catatan yang dikembalikan
-    } catch (e: Exception) {
-        Log.e("UpdateNote", e.message.toString())  // Menangani error jika ada
-        null  // Mengembalikan null jika terjadi error
-    }
-
-
     // Fungsi untuk menghapus catatan
-   // Menggunakan NoteResponse karena hanya status dan pesan yang dikembalikan, tanpa data catatan.
+    // Menggunakan NoteResponse karena hanya status dan pesan yang dikembalikan, tanpa data catatan.
     fun deleteNote(id: Int): NoteResponse? = try {
         val response =
             NoteApi.deleteNote(id.toString())  // Mengirim permintaan untuk menghapus catatan
@@ -202,19 +207,16 @@ class NoteRepository {
         null  // Mengembalikan null jika terjadi error
     }
 
-    // Fungsi untuk export semua catatan menjadi file PDF
+    //Fungsi untuk export semua catatan menjadi file PDF
     fun exportNotesToPdf(): Pair<Boolean, ExportPdfResponse?> = try {
         val res = NoteApi.exportNotesToPdf()
         val json = JSONObject(res)
-
         val code = json.getInt("code")
         val status = json.getString("status")
         val message = json.getString("message")
         val data = json.getJSONObject("data")
-
         val pdfFileName = data.getString("pdfFileName")
         val pdfFileUrl = data.getString("pdfFileUrl")
-
         val exportPdfData = ExportPdfData(pdfFileName, pdfFileUrl)
         val exportPdfResponse = ExportPdfResponse(code, status, message, exportPdfData)
 
@@ -227,6 +229,7 @@ class NoteRepository {
         Log.e("ExportNotes", e.message.toString())
         Pair(false, null)
     }
+
 
     // Tambahkan fungsi untuk mengekspor catatan ke CSV
     fun exportNotesToCsv(): Pair<Boolean, ExportCsvResponse?> = try {
