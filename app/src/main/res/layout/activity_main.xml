@@ -62,24 +62,10 @@
         android:backgroundTint="@color/color_button"
         android:text="@string/logout"
         android:textColor="@color/color_text"
-        app:layout_constraintBottom_toTopOf="@id/btnExportFile"
+        app:layout_constraintBottom_toTopOf="@id/btnLogout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnSave" />
-
-    <!-- Export Button -->
-    <Button
-        android:id="@+id/btnExportFile"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:backgroundTint="@color/color_button"
-        android:text="@string/export_catatan_ke_pdf"
-        android:textColor="@color/color_text"
-        app:layout_constraintBottom_toTopOf="@id/rvNotes"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnLogout" />
 
     <!-- ProgressBar for loading indicator -->
     <ProgressBar
@@ -101,7 +87,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnExportFile"
+        app:layout_constraintTop_toBottomOf="@id/btnLogout"
         tools:listitem="@layout/item_note" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

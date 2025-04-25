@@ -38,7 +38,6 @@ class MainActivity : AppCompatActivity() {
         val etDesc = findViewById<EditText>(R.id.etDescription)
         val btnSave = findViewById<Button>(R.id.btnSave)
         val btnLogout = findViewById<Button>(R.id.btnLogout)
-        val btnExport = findViewById<Button>(R.id.btnExportFile)
         val rvNotes = findViewById<RecyclerView>(R.id.rvNotes)
         val etSearch = findViewById<EditText>(R.id.etSearch)
         progressBar = findViewById(R.id.progressBar)
@@ -140,15 +139,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
-        btnExport.setOnClickListener {
-            exportToPdf() // Corrected function call
-        }
-    }
-    private fun exportToPdf() {
-        // Logika untuk mengekspor catatan ke PDF
-        Toast.makeText(this, "Menyiapkan Ekspor ke PDF...", Toast.LENGTH_SHORT).show()
-        val intent = Intent(this@MainActivity, ExportPdfActivity::class.java)
-        startActivity(intent)
     }
 }
 

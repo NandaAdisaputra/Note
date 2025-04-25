@@ -1,6 +1,7 @@
 package com.nandaadisaputra.note.ui
 
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -18,89 +19,99 @@ import kotlin.concurrent.thread
 
 class ExportPdfActivity : AppCompatActivity() {
 
-    // Deklarasi komponen UI
+    // Komponen UI
     private lateinit var btnExportPdf: Button
     private lateinit var tvResult: TextView
     private lateinit var progressBar: ProgressBar
 
-    // ViewModel yang bertugas mengatur data & komunikasi dengan server
+    // ViewModel untuk ekspor PDF
     private val viewModel: NoteViewModel by viewModels()
 
-    // Variabel untuk menyimpan file PDF hasil download
+    // File PDF yang telah diunduh
     private var downloadedPdfFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Menghubungkan layout XML dengan activity
         setContentView(R.layout.activity_export_pdf)
 
-        // Inisialisasi komponen UI dari XML
+        // Inisialisasi komponen dari layout
         btnExportPdf = findViewById(R.id.btnExportPdf)
         tvResult = findViewById(R.id.tvResult)
         progressBar = findViewById(R.id.exportPdfProgressBar)
 
-        // Saat tombol diklik, mulai proses ekspor dan tampilkan progressBar
+        // Ketika tombol diklik, mulai proses ekspor
         btnExportPdf.setOnClickListener {
-            progressBar.visibility = View.VISIBLE
-            viewModel.exportNotesToPdf()
+            progressBar.visibility = View.VISIBLE // Tampilkan loading
+            viewModel.exportNotesToPdf() // Panggil fungsi ekspor dari ViewModel
         }
 
         // Observasi hasil ekspor dari ViewModel
         viewModel.exportPdfResult.observe(this) { (success, response) ->
-            // Sembunyikan progressBar setelah dapat respon
-            progressBar.visibility = View.GONE
+            progressBar.visibility = View.GONE // Sembunyikan loading
 
-            // Jika ekspor berhasil dan respons tersedia
             if (success && response != null) {
-                val pdfName = response.data.pdfFileName  // Nama file dari response
-                val pdfUrl = response.data.pdfFileUrl    // URL file PDF dari server
+                val pdfName = response.data.pdfFileName // Ambil nama file dari server
+                val pdfUrl = response.data.pdfFileUrl   // Ambil URL file PDF dari server
 
-                // Tampilkan pesan berhasil di UI
+                // Tampilkan pesan sukses ke user
                 tvResult.text = "Berhasil diekspor sebagai $pdfName\nMengunduh file..."
 
-                // Proses pengunduhan dilakukan di thread terpisah
+                // Proses download dijalankan di thread terpisah agar UI tidak freeze
                 thread {
                     try {
+                        // Koneksi ke URL PDF
                         val url = URL(pdfUrl)
                         val connection = url.openConnection() as HttpURLConnection
                         connection.connect()
 
-                        // Jika response code dari server 200 OK
+                        // Jika server merespons dengan status OK (200)
                         if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                            val file = File(cacheDir, pdfName)  // Simpan di folder cache aplikasi
+
+                            // Ambil direktori Download (penyimpanan publik)
+                            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+                            // Buat folder jika belum ada
+                            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+
+                            // Buat file tujuan di folder Download
+                            val file = File(downloadsDir, pdfName)
+
+                            // Salin data dari koneksi ke file
                             connection.inputStream.use { input ->
                                 FileOutputStream(file).use { output ->
-                                    input.copyTo(output) // Salin konten dari server ke file
+                                    input.copyTo(output)
                                 }
                             }
 
-                            // Simpan file yang telah diunduh
+                            // Simpan referensi ke file
                             downloadedPdfFile = file
 
-                            // Update UI di thread utama
+                            // Update tampilan UI di thread utama
                             runOnUiThread {
-                                tvResult.append("\nFile berhasil diunduh.")
+                                tvResult.append("\nFile berhasil diunduh ke folder Download.")
+                                Toast.makeText(this, "File disimpan: ${file.name}", Toast.LENGTH_LONG).show()
                             }
+
                         } else {
-                            // Jika response code bukan 200
+                            // Jika response server bukan 200
                             runOnUiThread {
-                                tvResult.append("\nGagal mengunduh file.")
+                                tvResult.append("\nGagal mengunduh file dari server.")
                             }
                         }
 
-                        connection.disconnect()
+                        connection.disconnect() // Tutup koneksi
                     } catch (e: Exception) {
-                        // Jika terjadi error saat download
+                        // Tangani error download (misal koneksi gagal)
                         runOnUiThread {
-                            tvResult.append("\nError: ${e.message}")
+                            tvResult.append("\nError saat mengunduh: ${e.message}")
                         }
                     }
                 }
 
             } else {
-                // Jika gagal ekspor, tampilkan pesan gagal
+                // Jika ekspor gagal
                 tvResult.text = "Gagal mengekspor catatan."
-                Toast.makeText(this, "Export gagal! Coba lagi.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Export gagal! Silakan coba lagi.", Toast.LENGTH_SHORT).show()
             }
         }
     }
