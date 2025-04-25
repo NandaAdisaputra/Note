@@ -1,6 +1,5 @@
 package com.nandaadisaputra.note.ui
 
-// Import bawaan Android & project
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
