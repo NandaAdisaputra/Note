@@ -4,8 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -17,6 +19,7 @@ import com.nandaadisaputra.note.R
 import com.nandaadisaputra.note.adapter.NoteAdapter
 import com.nandaadisaputra.note.model.Note
 import com.nandaadisaputra.note.session.SessionManager
+import com.nandaadisaputra.note.ui.auth.LoginActivity
 import com.nandaadisaputra.note.viewmodel.NoteViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -25,19 +28,30 @@ class MainActivity : AppCompatActivity() {
     private val vm: NoteViewModel by viewModels()
     private lateinit var adapter: NoteAdapter
     private lateinit var sessionManager: SessionManager
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        // Inisialisasi
         val etTitle = findViewById<EditText>(R.id.etTitle)
         val etDesc = findViewById<EditText>(R.id.etDescription)
         val btnSave = findViewById<Button>(R.id.btnSave)
         val btnLogout = findViewById<Button>(R.id.btnLogout)
+        val btnExport = findViewById<Button>(R.id.btnExportFile)
         val rvNotes = findViewById<RecyclerView>(R.id.rvNotes)
         val etSearch = findViewById<EditText>(R.id.etSearch)
-
+        progressBar = findViewById(R.id.progressBar)
         sessionManager = SessionManager(this)
+
+        // Observasi perubahan status loading
+        vm.isLoading.observe(this, Observer { isLoading ->
+            if (isLoading) {
+                progressBar.visibility = View.VISIBLE // Menampilkan ProgressBar
+            } else {
+                progressBar.visibility = View.GONE // Menyembunyikan ProgressBar
+            }
+        })
 
         adapter = NoteAdapter(
             mutableListOf(),
@@ -126,6 +140,15 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
+        btnExport.setOnClickListener {
+            exportToPdf() // Corrected function call
+        }
+    }
+    private fun exportToPdf() {
+        // Logika untuk mengekspor catatan ke PDF
+        Toast.makeText(this, "Menyiapkan Ekspor ke PDF...", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this@MainActivity, ExportPdfActivity::class.java)
+        startActivity(intent)
     }
 }
 

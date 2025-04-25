@@ -5,127 +5,167 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.nandaadisaputra.note.model.ExportCsvResponse
+import com.nandaadisaputra.note.model.ExportPdfResponse
 import com.nandaadisaputra.note.model.Note
 import com.nandaadisaputra.note.repository.NoteRepository
 import com.nandaadisaputra.note.session.SessionManager
 import kotlin.concurrent.thread
 
-// ViewModel untuk mengelola data catatan dan berinteraksi dengan UI
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
-    // MutableLiveData untuk mengetahui apakah sudah mencapai halaman terakhir
+
+    // LiveData for export results (PDF and CSV)
+    private val _exportPdfResult = MutableLiveData<Pair<Boolean, ExportPdfResponse?>>()
+    val exportPdfResult: LiveData<Pair<Boolean, ExportPdfResponse?>> get() = _exportPdfResult
+
+    private val _exportCsvResult = MutableLiveData<Pair<Boolean, ExportCsvResponse?>>()
+    val exportCsvResult: LiveData<Pair<Boolean, ExportCsvResponse?>> get() = _exportCsvResult
+
+    // MutableLiveData for tracking pagination and loading state
     private val _isLastPage = MutableLiveData<Boolean>(false)
     val isLastPage: LiveData<Boolean> get() = _isLastPage
 
-    // Tambahkan LiveData tambahan untuk menangani loading state
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> get() = _isLoading
 
-    // Inisialisasi sessionManager untuk mengelola sesi pengguna
+    // SessionManager and repository instances
     private val sessionManager = SessionManager(application.applicationContext)
-
-    // Inisialisasi repository untuk mengakses data catatan
     private val repo = NoteRepository()
 
-    // MutableLiveData untuk menyimpan data catatan secara internal
+    // LiveData for notes
     private val _notes = MutableLiveData<List<Note>>()
-
-    // LiveData yang akan dibaca oleh UI (hanya getter yang disediakan untuk mencegah perubahan langsung)
     val notes: LiveData<List<Note>> get() = _notes
-
-    // Fungsi untuk memuat semua catatan dari repository
+    // ViewModel
     fun loadNotes() = thread {
-        _notes.postValue(repo.getAllNote())  // Memuat semua catatan dan update UI
-    }
-
-    // Fungsi untuk registrasi pengguna baru
-    fun registerUser(username: String, password: String, email: String, cb: (Boolean) -> Unit) =
-        thread {
-            val result = repo.registerUser(username, password, email)  // Registrasi pengguna
-            cb(result)  // Panggil callback dengan hasil registrasi
+        _isLoading.postValue(true)  // Menyatakan loading dimulai
+        val response = repo.getAllNotes()
+        response?.let {
+            _notes.postValue(it.data)
         }
-
-    // Fungsi untuk login pengguna
-    fun loginUser(username: String, password: String, cb: (Boolean, String?) -> Unit) = thread {
-        val result = repo.loginUser(username, password)  // Melakukan login
-        cb(result.first, result.second)  // Panggil callback dengan status login dan pesan error
+        _isLoading.postValue(false)  // Menyatakan loading selesai
     }
 
-    // Fungsi untuk mengambil catatan berdasarkan ID
+    // Function to get a note by its ID
     fun getNoteById(id: Int, cb: (Note?) -> Unit) = thread {
-        val note = repo.getNoteById(id)  // Ambil catatan berdasarkan ID
-        cb(note)  // Panggil callback dengan data catatan
+        val response = repo.getNoteById(id)
+        cb(response?.data)
     }
 
-    // Fungsi untuk menambah catatan baru
+    // Function to add a new note
     fun addNote(t: String, d: String, cb: (Boolean) -> Unit) = thread {
-        val r = repo.addNote(t, d)  // Menambah catatan baru
-        cb(r)  // Panggil callback dengan hasil (sukses/gagal)
-
-        // Jika berhasil menambah catatan, muat ulang daftar catatan
-        if (r) _notes.postValue(repo.getAllNote())
+        // Set loading ke true
+        _isLoading.postValue(true)
+        val response = repo.addNote(t, d)
+        val success = response != null && response.code == 200
+        cb(success)
+        // Setelah selesai, set loading ke false
+        _isLoading.postValue(false)
+        if (success) {
+            val updated = repo.getAllNotes()
+            updated?.let { _notes.postValue(it.data) }
+        }
     }
 
-    // Fungsi untuk mencari catatan berdasarkan query
+    // Function to search notes based on a query
     fun searchNotes(q: String) = thread {
-        _notes.postValue(repo.searchNotes(q))  // Menampilkan hasil pencarian
+        // Set loading ke true
+        _isLoading.postValue(true)
+        val result = repo.searchNotes(q)
+        result?.let {
+            // Setelah selesai, set loading ke false
+            _isLoading.postValue(false)
+            _notes.postValue(it.data)
+        }
     }
 
-    // Fungsi untuk memperbarui catatan berdasarkan ID
+    // Function to update an existing note
     fun updateNote(id: Int, t: String, d: String, cb: (Boolean) -> Unit) = thread {
-        val r = repo.updateNote(id, t, d)
-        cb(r)
-        if (r) {
-            _notes.postValue(repo.getAllNote())
+        // Set loading ke true
+        _isLoading.postValue(true)
+        val response = repo.updateNote(id, t, d) // ← response adalah NoteResponse?
+        val success = response?.code == 200
+        cb(success)
+        // Setelah selesai, set loading ke false
+        _isLoading.postValue(false)
+        if (success) {
+            val updated = repo.getAllNotes()
+            updated?.let { _notes.postValue(it.data) }
             getPaginatedNotes(1, 10)
         }
     }
 
-    // Fungsi untuk menghapus catatan berdasarkan ID
+    // Function to delete a note
     fun deleteNote(id: Int, cb: (Boolean) -> Unit) = thread {
-        val r = repo.deleteNote(id)  // Menghapus catatan berdasarkan ID
-        cb(r)  // Panggil callback dengan hasil (sukses/gagal)
-
-        // Jika berhasil menghapus, muat ulang daftar catatan
-        if (r) _notes.postValue(repo.getAllNote())
+        // Set loading ke true
+        _isLoading.postValue(true)
+        val response = repo.deleteNote(id)
+        val success = response?.code == 200
+        cb(success)
+        // Setelah selesai, set loading ke false
+        _isLoading.postValue(false)
+        if (success) {
+            val updated = repo.getAllNotes()
+            updated?.let { _notes.postValue(it.data) }
+        }
     }
 
-    // Fungsi untuk mengambil catatan dengan pagination (limit dan offset)
+    // Function to get paginated notes
     fun getPaginatedNotes(p: Int, s: Int, cb: (Boolean) -> Unit = {}) {
         thread {
-            _isLoading.postValue(true) // Tampilkan loading indicator di UI
+            _isLoading.postValue(true)
 
             try {
-                val t = sessionManager.getToken() // Ambil token dari session
-                if (t.isNullOrEmpty()) {
-                    // Jika token kosong, log error dan kirim callback gagal
-                    Log.e("VM", "Token kosong. Gagal ambil data.")
+                val token = sessionManager.getToken()
+                if (token.isNullOrEmpty()) {
+                    Log.e("VM", "Token is empty. Failed to fetch data.")
                     cb(false)
                     return@thread
                 }
 
-                val d = repo.getPaginatedNotes(p, s, t) // Ambil data catatan dari repo (API)
+                val response = repo.getPaginatedNotes(p, s, token)
+                if (response?.data?.size ?: 0 < s) _isLastPage.postValue(true)
 
-                if (d.size < s) _isLastPage.postValue(true) // Kalau data kurang dari ukuran page, berarti ini halaman terakhir
-
-                val r = (_notes.value ?: emptyList()) + d // Gabungkan data lama + data baru
-                _notes.postValue(r) // Update tampilan
-
-                cb(true) // Kirim callback sukses
+                val currentNotes = _notes.value ?: emptyList()
+                _notes.postValue(currentNotes + (response?.data ?: emptyList()))
+                cb(true)
 
             } catch (e: Exception) {
-                // Tangani error dan kirim callback gagal
-                Log.e("VM", "Err ambil data: ${e.message}")
+                Log.e("VM", "Error fetching data: ${e.message}")
                 cb(false)
             } finally {
-                _isLoading.postValue(false) // Sembunyikan loading indicator
+                _isLoading.postValue(false)
             }
         }
     }
+
+
+    // Function to export notes to PDF
+    fun exportNotesToPdf() = thread {
+        // Set loading ke true
+        _isLoading.postValue(true)
+        try {
+            // Setelah selesai, set loading ke false
+            _isLoading.postValue(false)
+            val result = repo.exportNotesToPdf()
+            _exportPdfResult.postValue(result)
+        } catch (e: Exception) {
+            Log.e("VM", "Error exporting PDF: ${e.message}")
+            _exportPdfResult.postValue(Pair(false, null))
+        }
+    }
+
+    // Function to export notes to CSV
+    fun exportNotesToCsv() = thread {
+        // Set loading ke true
+        _isLoading.postValue(true)
+        try {
+            // Setelah selesai, set loading ke false
+            _isLoading.postValue(false)
+            val result = repo.exportNotesToCsv()
+            _exportCsvResult.postValue(result)
+        } catch (e: Exception) {
+            Log.e("VM", "Error exporting CSV: ${e.message}")
+            _exportCsvResult.postValue(Pair(false, null))
+        }
+    }
 }
-
-
-// Tips Hafalan Cepat:
-// Semua fungsi pakai thread { ... } biar tidak blocking.
-// _notes.postValue(...) = update tampilan.
-// cb(r) = callback untuk hasil (berhasil/gagal).
-// Nama variabel dipendekkan: t, d, r, cb, q → lebih cepat ditulis dan diingat.

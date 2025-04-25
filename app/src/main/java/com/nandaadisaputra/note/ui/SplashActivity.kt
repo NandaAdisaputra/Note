@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.nandaadisaputra.note.R
+import com.nandaadisaputra.note.ui.auth.LoginActivity
 
 class SplashActivity : AppCompatActivity() {
 

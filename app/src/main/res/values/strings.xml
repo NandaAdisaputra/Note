@@ -15,4 +15,9 @@
     <string name="belum_punya_akun_daftar">Belum punya akun? Daftar</string>
     <string name="logout">Logout</string>
     <string name="note">note</string>
+    <string name="export_catatan_ke_pdf">Export Catatan ke PDF</string>
+    <string name="hasil_export_akan_muncul_di_sini">Hasil export akan muncul di sini.</string>
+    <string name="buka_pdf">Buka PDF</string>
+    <string name="export_notes_to_csv">Export Notes to CSV</string>
+    <string name="login">Login</string>
 </resources>

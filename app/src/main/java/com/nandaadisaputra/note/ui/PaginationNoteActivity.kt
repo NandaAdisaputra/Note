@@ -16,6 +16,7 @@ import com.nandaadisaputra.note.R
 import com.nandaadisaputra.note.adapter.NoteAdapter
 import com.nandaadisaputra.note.model.Note
 import com.nandaadisaputra.note.session.SessionManager
+import com.nandaadisaputra.note.ui.auth.LoginActivity
 import com.nandaadisaputra.note.viewmodel.NoteViewModel
 
 class PaginationNoteActivity : AppCompatActivity() {

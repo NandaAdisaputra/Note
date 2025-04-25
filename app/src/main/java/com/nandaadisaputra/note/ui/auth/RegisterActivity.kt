@@ -1,20 +1,23 @@
-package com.nandaadisaputra.note.ui
+package com.nandaadisaputra.note.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.nandaadisaputra.note.R
-import com.nandaadisaputra.note.viewmodel.NoteViewModel
+import com.nandaadisaputra.note.viewmodel.AuthViewModel
 
 class RegisterActivity : AppCompatActivity() {
 
-    private val vm: NoteViewModel by viewModels()  // Menggunakan ViewModel untuk mengelola data
-
+    private val vm: AuthViewModel by viewModels()  // Menggunakan ViewModel untuk mengelola data
+    private lateinit var progressBar: ProgressBar
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -25,6 +28,15 @@ class RegisterActivity : AppCompatActivity() {
         val etEmail = findViewById<EditText>(R.id.etEmail)  // EditText untuk memasukkan email
         val btnRegister = findViewById<Button>(R.id.btnRegister)  // Button untuk tombol registrasi
         val tvLogin = findViewById<TextView>(R.id.tvLoginLink)  // TextView untuk link ke halaman login
+        progressBar = findViewById(R.id.registerProgressBar)
+        // Observasi perubahan status loading
+        vm.isLoading.observe(this, Observer { isLoading ->
+            if (isLoading) {
+                progressBar.visibility = View.VISIBLE // Menampilkan ProgressBar
+            } else {
+                progressBar.visibility = View.GONE // Menyembunyikan ProgressBar
+            }
+        })
 
         // Set listener untuk tombol Register
         btnRegister.setOnClickListener {

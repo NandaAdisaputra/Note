@@ -6,7 +6,39 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- ProgressBar for loading indicator -->
+    <!-- EditText for Title -->
+    <EditText
+        android:id="@+id/etTitle"
+        style="@style/LayoutEditText"
+        android:layout_marginTop="16dp"
+        android:autofillHints="@string/judul"
+        android:hint="@string/judul"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etSearch" />
+
+    <!-- EditText for Search -->
+    <EditText
+        android:id="@+id/etSearch"
+        style="@style/LayoutEditText"
+        android:autofillHints="@string/cari_catatan"
+        android:hint="@string/cari_catatan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- EditText for Description -->
+    <EditText
+        android:id="@+id/etDescription"
+        style="@style/LayoutEditText"
+        android:layout_marginTop="16dp"
+        android:autofillHints="@string/deskripsi"
+        android:hint="@string/deskripsi"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etTitle" />
+
+    <!-- Save Button -->
     <Button
         android:id="@+id/btnSave"
         android:layout_width="0dp"
@@ -21,6 +53,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etDescription" />
 
+    <!-- Logout Button -->
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="0dp"
@@ -29,40 +62,26 @@
         android:backgroundTint="@color/color_button"
         android:text="@string/logout"
         android:textColor="@color/color_text"
-        app:layout_constraintBottom_toTopOf="@id/rvNotes"
+        app:layout_constraintBottom_toTopOf="@id/btnExportFile"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnSave" />
 
-    <EditText
-        android:id="@+id/etDescription"
-        style="@style/LayoutEditText"
-        android:layout_marginTop="16dp"
-        android:autofillHints="@string/deskripsi"
-        android:hint="@string/deskripsi"
+    <!-- Export Button -->
+    <Button
+        android:id="@+id/btnExportFile"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/color_button"
+        android:text="@string/export_catatan_ke_pdf"
+        android:textColor="@color/color_text"
+        app:layout_constraintBottom_toTopOf="@id/rvNotes"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etTitle" />
+        app:layout_constraintTop_toBottomOf="@id/btnLogout" />
 
-    <EditText
-        android:id="@+id/etSearch"
-        style="@style/LayoutEditText"
-        android:autofillHints="@string/cari_catatan"
-        android:hint="@string/cari_catatan"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/etTitle"
-        style="@style/LayoutEditText"
-        android:layout_marginTop="16dp"
-        android:autofillHints="@string/judul"
-        android:hint="@string/judul"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etSearch" />
-
+    <!-- ProgressBar for loading indicator -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -75,13 +94,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- RecyclerView for displaying notes -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvNotes"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnLogout"
+        app:layout_constraintTop_toBottomOf="@id/btnExportFile"
         tools:listitem="@layout/item_note" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
